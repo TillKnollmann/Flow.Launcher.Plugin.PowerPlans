@@ -1,0 +1,43 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - .github/workflows/*
+      - assets/*
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      python_ver: 3.11
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: get version
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: 'plugin.json'
+          prop_path: 'Version'
+      - run: echo ${{steps.version.outputs.prop}}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ./requirements.txt -t ./lib
+          jq '.IcoPath = "Images/app.png"' plugin.json > tmp.json && mv tmp.json plugin.json
+          zip -r Flow.Launcher.Plugin.PowerPlans.zip . -x '*.git*' -x 'assets/*' -x 'LICENSE'
+      - name: Publish
+        if: success()
+        uses: softprops/action-gh-release@v1
+        with:
+          files: 'Flow.Launcher.Plugin.PowerPlans.zip'
+          tag_name: "v${{steps.version.outputs.prop}}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
