@@ -1,8 +1,6 @@
 # Power Plan Switcher for Flow Launcher
 
 A FlowLauncher plugin to easily activate power plans.
-Currently only supports the Windows default power plans "Power saver", "Balanced", and "High Performance".
-If you desire more, feel free to leave a suggestion in this repository.
 
 ## Installation
 
