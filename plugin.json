@@ -7,6 +7,6 @@
     "Version": "1.0.0",
     "Language": "python",
     "Website": "https://github.com/TillKnollmann/Flow.Launcher.Plugin.PowerPlans",
-    "IcoPath": "https://cdn.jsdelivr.net/gh/TillKnollmann/Flow.Launcher.Plugin.PowerPlans@main/Images/app.png",
+    "IcoPath": "Images/app.png",
     "ExecuteFileName": "main.py"
 }
