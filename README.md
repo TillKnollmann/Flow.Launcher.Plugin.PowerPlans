@@ -15,4 +15,4 @@ Select a result to activate the plan.
 
 ## Attribution
 
-All images are from <https://fontawesome.com/icons>.
+All images are from <https://icons8.com/icons>.
