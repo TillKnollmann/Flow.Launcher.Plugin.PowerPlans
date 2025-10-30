@@ -8,11 +8,11 @@ You can install this plugin via `pm install Power Plans`
 
 ## Usage
 
-![Demo Usage Gif](https://cdn.jsdelivr.net/gh/TillKnollmann/Flow.Launcher.Plugin.PowerPlans@main/assets/demo.gif)
+![Demo Animation](assets/DemoAnimation.webp)
 
 Type `power <search-term>` and see a list of available power plans.
 Select a result to activate the plan.
 
 ## Attribution
 
-All images are from <https://icons8.com/icons>.
+All icons are from <https://icons8.com/icons>.
