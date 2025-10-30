@@ -11,7 +11,7 @@
 </p>
 ++++
 
-= Power Plan Switcher for Flow Launcher
+= Power Plan Switcher for FlowLauncher
 
 A [FlowLauncher](https://www.flowlauncher.com/) plugin to easily activate power plans.
 
