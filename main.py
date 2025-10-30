@@ -126,7 +126,7 @@ class PowerPlanManager:
                 if plan_info:
                     plans.append(PowerPlan(guid, plan_info["name"], plan_info["icon"]))
 
-        return plans
+        return sorted(plans, key=lambda plan: plan.name)
 
     @staticmethod
     def switch_to_plan(identifier):
@@ -136,14 +136,14 @@ class PowerPlanManager:
             creationflags=subprocess.CREATE_NO_WINDOW
         )
 
-    @staticmethod
-    def get_active_plan():
+    def get_active_plan(self):
         """Returns the GUID of the currently active power plan."""
-        output = str(
-            subprocess.check_output(
-                "powercfg /GETACTIVESCHEME", creationflags=subprocess.CREATE_NO_WINDOW
-            )
+        output_bytes = subprocess.check_output(
+            ["powercfg", "/GETACTIVESCHEME"],
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
+        output = self.system_encoding.decode_output(output_bytes)
+
         return re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE).group(0)
 
 
@@ -170,7 +170,7 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         results = []
 
         power_plans = self.power_plan_manager.get_all_system_plans()
-        active_plan = PowerPlanManager.get_active_plan()
+        active_plan = self.power_plan_manager.get_active_plan()
         filtered_power_plans = (
             [p for p in power_plans if query_text.lower() in p.name.lower()]
             if query_text
