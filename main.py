@@ -138,17 +138,20 @@ class PowerPlanManager:
 
     def get_active_plan(self):
         """Returns the GUID of the currently active power plan."""
-        output_bytes = subprocess.check_output(
-            ["powercfg", "/GETACTIVESCHEME"],
-            creationflags=subprocess.CREATE_NO_WINDOW
-        )
-        output = self.system_encoding.decode_output(output_bytes)
+        try:
+            output_bytes = subprocess.check_output(
+                ["powercfg", "/GETACTIVESCHEME"],
+                creationflags=subprocess.CREATE_NO_WINDOW
+            )
+            output = self.system_encoding.decode_output(output_bytes)
 
-        match = re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE)
-        if match:
-            return match.group(0)
-        else:
-            return None
+            match = re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE)
+            if match:
+                return match.group(0)
+            else:
+                return None
+        except Exception:
+            return None # silently ignore errors
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
