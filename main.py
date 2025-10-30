@@ -119,7 +119,7 @@ class PowerPlanManager:
                     if plan_info:
                         plans.append(PowerPlan(guid, plan_info["name"], plan_info["icon"]))
 
-        except Exception as e:
+        except Exception:
             # fallback: use default plans
             for guid in self.default_plans.get_all_guids():
                 plan_info = self.default_plans.get_plan(guid)
@@ -144,7 +144,11 @@ class PowerPlanManager:
         )
         output = self.system_encoding.decode_output(output_bytes)
 
-        return re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE).group(0)
+        match = re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE)
+        if match:
+            return match.group(0)
+        else:
+            return None
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):

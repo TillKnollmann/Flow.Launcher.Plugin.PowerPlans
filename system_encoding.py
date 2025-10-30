@@ -53,9 +53,8 @@ class SystemEncoding:
         """Detects the current system console encoding by running chcp."""
         try:
             chcp_output = subprocess.check_output(
-                "chcp",
-                creationflags=subprocess.CREATE_NO_WINDOW,
-                shell=True
+                ["chcp"],
+                creationflags=subprocess.CREATE_NO_WINDOW
             )
             # parse output to find any number (the codepage)
             match = re.search(r'(\d+)', chcp_output.decode('ascii', errors='ignore'))
