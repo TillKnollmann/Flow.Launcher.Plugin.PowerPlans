@@ -54,7 +54,8 @@ class SystemEncoding:
         try:
             chcp_output = subprocess.check_output(
                 ["chcp"],
-                creationflags=subprocess.CREATE_NO_WINDOW
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                shell=True # needed for chcp on Windows
             )
             # parse output to find any number (the codepage)
             match = re.search(r'(\d+)', chcp_output.decode('ascii', errors='ignore'))
@@ -64,14 +65,7 @@ class SystemEncoding:
         except Exception:
             pass # silently ignore detection errors
 
-        # if detection fails, try to get encoding from locale
-        try:
-            import locale
-            return locale.getpreferredencoding()
-        except Exception:
-            pass # silently ignore locale errors
-
-        return 'utf-8'
+        return 'cp850'
 
     def get_encoding(self):
         """Returns the system encoding."""
