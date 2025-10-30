@@ -66,7 +66,7 @@ class DefaultPowerPlans:
             with open(self._cache_file_path, 'w', encoding='utf-8') as f:
                 json.dump({'plans': plans}, f, ensure_ascii=False, indent=2)
         except Exception:
-            pass
+            pass # silently ignore cache save errors
 
     def _build_localized_plans(self):
         """Builds the localized plans dictionary by querying powercfg."""
@@ -89,7 +89,7 @@ class DefaultPowerPlans:
         """
         try:
             output_bytes = subprocess.check_output(
-                f"powercfg /query {guid}",
+                ["powercfg", "/query", guid],
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
             output = self._system_encoding.decode_output(output_bytes)
@@ -104,7 +104,7 @@ class DefaultPowerPlans:
                 if match and match.group(1).lower() == guid.lower():
                     return match.group(2).strip()
         except Exception:
-            pass
+            pass # silently ignore errors
         return None
 
     def get_plan(self, guid):

@@ -38,7 +38,7 @@ class SystemEncoding:
                     data = json.load(f)
                     return data.get('encoding')
         except Exception:
-            pass
+            pass # silently ignore cache load errors
         return None
 
     def _save_to_cache(self, encoding):
@@ -47,7 +47,7 @@ class SystemEncoding:
             with open(self._cache_file_path, 'w', encoding='utf-8') as f:
                 json.dump({'encoding': encoding}, f, ensure_ascii=False, indent=2)
         except Exception:
-            pass
+            pass # silently ignore cache save errors
 
     def _detect_encoding(self):
         """Detects the current system console encoding by running chcp."""
@@ -63,14 +63,14 @@ class SystemEncoding:
                 codepage = match.group(1)
                 return f'cp{codepage}'
         except Exception:
-            pass
+            pass # silently ignore detection errors
 
         # if detection fails, try to get encoding from locale
         try:
             import locale
             return locale.getpreferredencoding()
         except Exception:
-            pass
+            pass # silently ignore locale errors
 
         return 'utf-8'
 
@@ -80,4 +80,4 @@ class SystemEncoding:
 
     def decode_output(self, output_bytes):
         """Decodes subprocess output bytes using system encoding."""
-        return output_bytes.decode(self._encoding)
+        return output_bytes.decode(self._encoding, errors='replace')

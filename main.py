@@ -83,7 +83,7 @@ class PowerPlanManager:
 
         try:
             output_bytes = subprocess.check_output(
-                "powercfg /list",
+                ["powercfg", "/list"],
                 creationflags=subprocess.CREATE_NO_WINDOW
             )
             output = self.system_encoding.decode_output(output_bytes)
@@ -132,7 +132,8 @@ class PowerPlanManager:
     def switch_to_plan(identifier):
         """Switches to the specified power plan."""
         subprocess.call(
-            f"powercfg /s {identifier}", creationflags=subprocess.CREATE_NO_WINDOW
+            ["powercfg", "/s", identifier],
+            creationflags=subprocess.CREATE_NO_WINDOW
         )
 
     @staticmethod
