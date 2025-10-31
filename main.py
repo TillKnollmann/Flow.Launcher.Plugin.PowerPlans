@@ -11,8 +11,10 @@ sys.path.append(os.path.join(parent_folder_path, "lib"))
 sys.path.append(os.path.join(parent_folder_path, "plugin"))
 
 from flowlauncher import FlowLauncher
-from system_encoding import SystemEncoding
+
 from default_power_plans import DefaultPowerPlans
+from system_encoding import SystemEncoding
+
 
 class Result:
     """Represents a result entry for Flow Launcher."""
@@ -83,41 +85,57 @@ class PowerPlanManager:
 
         try:
             output_bytes = subprocess.check_output(
-                ["powercfg", "/list"],
-                creationflags=subprocess.CREATE_NO_WINDOW
+                ["powercfg", "/list"], creationflags=subprocess.CREATE_NO_WINDOW
             )
             output = self.system_encoding.decode_output(output_bytes)
 
-            for line in output.split('\n'):
+            for line in output.split("\n"):
                 # search for GUID and name
                 match = re.search(
-                    r'(' + self.UUID_REGEX + r')\s+\(([^)]+)\)',
+                    r"(" + self.UUID_REGEX + r")\s+\(([^)]+)\)\s*(\*)?",
                     line,
-                    re.IGNORECASE
+                    re.IGNORECASE,
                 )
                 if match:
                     guid = match.group(1).lower()
                     name = match.group(2).strip()
+                    is_active = match.group(3) is not None
+                    name_suffix = " (active)" if is_active else ""
+
                     found_guids.add(guid)
 
                     if self.default_plans.is_default_plan(guid):
                         # use cached localized name and icon for default plans
                         plan_info = self.default_plans.get_plan(guid)
                         if plan_info:
-                            plans.append(PowerPlan(guid, plan_info["name"], plan_info["icon"]))
+                            plans.append(
+                                PowerPlan(
+                                    guid,
+                                    plan_info["name"] + name_suffix,
+                                    plan_info["icon"],
+                                )
+                            )
                         else:
                             # fallback: use system name with default icon
-                            plans.append(PowerPlan(guid, name, self.DEFAULT_APP_ICON))
+                            plans.append(
+                                PowerPlan(
+                                    guid, name + name_suffix, self.DEFAULT_APP_ICON
+                                )
+                            )
                     else:
                         # custom power plan - use default icon
-                        plans.append(PowerPlan(guid, name, self.DEFAULT_APP_ICON))
+                        plans.append(
+                            PowerPlan(guid, name + name_suffix, self.DEFAULT_APP_ICON)
+                        )
 
             # add missing default plans
             for guid in self.default_plans.get_all_guids():
                 if guid not in found_guids:
                     plan_info = self.default_plans.get_plan(guid)
                     if plan_info:
-                        plans.append(PowerPlan(guid, plan_info["name"], plan_info["icon"]))
+                        plans.append(
+                            PowerPlan(guid, plan_info["name"], plan_info["icon"])
+                        )
 
         except Exception:
             # fallback: use default plans
@@ -132,26 +150,8 @@ class PowerPlanManager:
     def switch_to_plan(identifier):
         """Switches to the specified power plan."""
         subprocess.call(
-            ["powercfg", "/s", identifier],
-            creationflags=subprocess.CREATE_NO_WINDOW
+            ["powercfg", "/s", identifier], creationflags=subprocess.CREATE_NO_WINDOW
         )
-
-    def get_active_plan(self):
-        """Returns the GUID of the currently active power plan."""
-        try:
-            output_bytes = subprocess.check_output(
-                ["powercfg", "/GETACTIVESCHEME"],
-                creationflags=subprocess.CREATE_NO_WINDOW
-            )
-            output = self.system_encoding.decode_output(output_bytes)
-
-            match = re.search(PowerPlanManager.UUID_REGEX, output, re.IGNORECASE)
-            if match:
-                return match.group(0)
-            else:
-                return None
-        except Exception:
-            return None # silently ignore errors
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
@@ -169,7 +169,9 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         plans_cache_path = os.path.join(cache_dir, "default_plans.json")
         self.default_plans = DefaultPowerPlans(self.system_encoding, plans_cache_path)
 
-        self.power_plan_manager = PowerPlanManager(self.system_encoding, self.default_plans)
+        self.power_plan_manager = PowerPlanManager(
+            self.system_encoding, self.default_plans
+        )
 
         super().__init__()
 
@@ -177,7 +179,6 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         results = []
 
         power_plans = self.power_plan_manager.get_all_system_plans()
-        active_plan = self.power_plan_manager.get_active_plan()
         filtered_power_plans = (
             [p for p in power_plans if query_text.lower() in p.name.lower()]
             if query_text
@@ -195,14 +196,9 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
             )
         else:
             for power_plan in filtered_power_plans:
-                name = (
-                    power_plan.name + " (active)"
-                    if power_plan.identifier == active_plan
-                    else power_plan.name
-                )
                 results.append(
                     Result(
-                        title=name,
+                        title=power_plan.name,
                         subtitle=f"Switch to '{power_plan.name}'",
                         ico_path=power_plan.icon_path,
                         json_rpc_action=JsonRPCAction(
