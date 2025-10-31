@@ -2,6 +2,11 @@
 
 == Unreleased
 
+* TODO
+
+
+== https://github.com/TillKnollmann/Flow.Launcher.Plugin.PowerPlans/releases/tag/v1.2.1[1.2.1] – 31.10.25
+
 * Hotfix due to incorrect publish workflow
 
 == https://github.com/TillKnollmann/Flow.Launcher.Plugin.PowerPlans/releases/tag/v1.2.0[1.2.0] – 31.10.25
