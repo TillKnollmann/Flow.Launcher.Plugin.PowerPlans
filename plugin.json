@@ -4,7 +4,7 @@
     "Name": "Power Plans",
     "Description": "Lists and activates power plans",
     "Author": "Till Knollmann",
-    "Version": "1.2.0",
+    "Version": "1.3.0-SNAPSHOT",
     "Language": "python",
     "Website": "https://github.com/TillKnollmann/Flow.Launcher.Plugin.PowerPlans",
     "IcoPath": "Images/app.png",
