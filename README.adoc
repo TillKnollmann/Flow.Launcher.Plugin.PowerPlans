@@ -13,7 +13,7 @@
 
 = Power Plan Switcher for FlowLauncher
 
-A [FlowLauncher](https://www.flowlauncher.com/) plugin to easily activate power plans.
+A https://www.flowlauncher.com/[FlowLauncher] plugin to easily activate power plans.
 
 toc::[]
 :toclevels: 3
