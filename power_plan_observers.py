@@ -99,15 +99,20 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
         try:
             c = wmi.WMI(namespace="root\\WMI")
 
+            # WMI class name from reverse engineering - may vary by Legion model
             try:
                 for method in c.LENOVO_LIGHTING_METHOD():
+                    # Parameters: zone (0=power LED, uncertain), color, brightness
+                    # Method signature based on community sources, not officially documented
                     method.SetLighting(0, color_code, 100)
                     return
             except Exception:
                 pass  # Ignore errors and try next method
 
+            # Alternative WMI class - fallback for different Legion models
             try:
                 for data in c.LENOVO_GAMEZONE_DATA():
+                    # String format based on Lenovo Legion Toolkit reverse engineering
                     data.SetData(f"PowerLED:{color_code}")
                     return
             except Exception:
