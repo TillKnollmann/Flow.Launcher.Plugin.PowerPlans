@@ -35,7 +35,7 @@ To enable it:
    %APPDATA%\FlowLauncher\Plugins\Power Plans-{version}\.cache\
    ```
 
-2. Open `settings.json` in a text editor
+2. Open or create `settings.json` (a default file is created on first run)
 
 3. Change `lenovo_legion_led_enabled` from `false` to `true`:
    ```json
@@ -45,6 +45,8 @@ To enable it:
    ```
 
 4. Restart Flow Launcher
+
+**Note:** A sample settings file is available at `settings.example.json` in the plugin directory.
 
 ## How LED Control Works
 
