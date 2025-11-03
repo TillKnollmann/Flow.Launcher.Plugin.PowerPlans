@@ -17,9 +17,9 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
 
     # GUID to LED color code mapping (1=white, 2=red)
     LENOVO_POWER_PLANS = {
-        "a1841308-3541-4fab-bc81-f71556f20b4a": 1,  # Power Saver
-        "381b4222-f694-41f0-9685-ff5bb260df2e": 1,  # Balanced
-        "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c": 2,  # High Performance
+        "16edbccd-dee9-4ec4-ace5-2f0b5f2a8975": 0,  # Quiet -> blue
+        "85d583c5-cf2e-4197-80fd-3789a227a72c": 1,  # Balanced -> white
+        "52521609-efc9-4268-b9ba-67dea73f18b2": 2,  # Performance -> red
     }
 
     def __init__(self, cache_dir):
@@ -94,22 +94,28 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
     def _set_led_color(self, color_code):
         """Set LED via PowerShell WMI calls."""
         # WMI class name from reverse engineering - may vary by Legion model
-        self._try_wmi_method("LENOVO_LIGHTING_METHOD", "SetLighting", [0, color_code, 100])
+        self._try_wmi_method(
+            "LENOVO_LIGHTING_METHOD", "SetLighting", [0, color_code, 100]
+        )
         # Alternative WMI class - fallback for different Legion models
-        self._try_wmi_method("LENOVO_GAMEZONE_DATA", "SetData", [f"PowerLED:{color_code}"])
+        self._try_wmi_method(
+            "LENOVO_GAMEZONE_DATA", "SetData", [f"PowerLED:{color_code}"]
+        )
 
     def _try_wmi_method(self, wmi_class, method_name, params):
         """Invoke WMI method via PowerShell subprocess."""
         try:
             # Build PowerShell command to invoke WMI method
             # Parameters: zone (0=power LED, uncertain), color, brightness
-            params_str = ", ".join(str(p) if isinstance(p, int) else f'"{p}"' for p in params)
-            
+            params_str = ", ".join(
+                str(p) if isinstance(p, int) else f'"{p}"' for p in params
+            )
+
             ps_command = (
                 f"Get-WmiObject -Namespace root\\WMI -Class {wmi_class} | "
                 f"ForEach-Object {{ $_.{method_name}({params_str}) }}"
             )
-            
+
             subprocess.run(
                 ["powershell", "-Command", ps_command],
                 creationflags=subprocess.CREATE_NO_WINDOW,
