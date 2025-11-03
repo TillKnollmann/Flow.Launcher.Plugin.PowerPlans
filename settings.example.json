@@ -1,4 +1,0 @@
-{
-  "lenovo_legion_led_enabled": false,
-  "lenovo_legion_led_info": "Set to true to enable Lenovo Legion power LED control. This feature is only available on Lenovo Legion laptops. Requires the 'wmi' Python package: pip install wmi pywin32"
-}

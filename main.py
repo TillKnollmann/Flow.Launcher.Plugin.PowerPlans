@@ -14,7 +14,7 @@ from flowlauncher import FlowLauncher
 
 from default_power_plans import DefaultPowerPlans
 from system_encoding import SystemEncoding
-from lenovo_legion_led import LenovoLegionLED, create_default_settings_file
+from power_plan_observers import LenovoLegionLEDObserver
 
 
 class Result:
@@ -58,14 +58,8 @@ class PowerPlan:
         self.name = name
         self.icon_path = icon_path
 
-    def switch_to(self, lenovo_led_controller=None):
-        """
-        Switch to this power plan.
-        
-        Args:
-            lenovo_led_controller: Optional LenovoLegionLED instance for LED control
-        """
-        PowerPlanManager.switch_to_plan(self.identifier, lenovo_led_controller)
+    def switch_to(self):
+        PowerPlanManager.switch_to_plan(self.identifier)
 
 
 class PowerPlanManager:
@@ -74,16 +68,18 @@ class PowerPlanManager:
     DEFAULT_APP_ICON = "Images/app.png"
     UUID_REGEX = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
-    def __init__(self, system_encoding, default_plans):
+    def __init__(self, system_encoding, default_plans, observers=None):
         """
         Initializes the PowerPlanManager.
 
         Args:
             system_encoding: SystemEncoding instance
             default_plans: DefaultPowerPlans instance
+            observers: List of PowerPlanActivationObserver instances
         """
         self.system_encoding = system_encoding
         self.default_plans = default_plans
+        self.observers = observers or []
 
     def get_all_system_plans(self):
         """Retrieves all power plans available on the system using powercfg."""
@@ -154,25 +150,25 @@ class PowerPlanManager:
         return sorted(plans, key=lambda plan: plan.name)
 
     @staticmethod
-    def switch_to_plan(identifier, lenovo_led_controller=None):
+    def switch_to_plan(identifier, observers=None):
         """
         Switches to the specified power plan.
         
         Args:
-            identifier: The power plan GUID to switch to
-            lenovo_led_controller: Optional LenovoLegionLED instance for LED control
+            identifier: The power plan GUID
+            observers: List of observers to notify
         """
         subprocess.call(
             ["powercfg", "/s", identifier], creationflags=subprocess.CREATE_NO_WINDOW
         )
         
-        # Update Lenovo Legion LED if controller is available
-        if lenovo_led_controller:
-            try:
-                lenovo_led_controller.set_led_for_power_plan(identifier)
-            except Exception:
-                # Silently ignore LED control errors - don't affect core functionality
-                pass
+        # Notify observers
+        if observers:
+            for observer in observers:
+                try:
+                    observer.on_power_plan_activated(identifier)
+                except Exception:
+                    pass
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
@@ -190,20 +186,12 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         plans_cache_path = os.path.join(cache_dir, "default_plans.json")
         self.default_plans = DefaultPowerPlans(self.system_encoding, plans_cache_path)
 
+        # Initialize observers
+        self.observers = [LenovoLegionLEDObserver(cache_dir)]
+
         self.power_plan_manager = PowerPlanManager(
-            self.system_encoding, self.default_plans
+            self.system_encoding, self.default_plans, self.observers
         )
-        
-        # Initialize Lenovo Legion LED support
-        try:
-            settings_path = os.path.join(cache_dir, "settings.json")
-            if not os.path.exists(settings_path):
-                create_default_settings_file(settings_path)
-            self.lenovo_led = LenovoLegionLED(settings_path)
-        except Exception:
-            # If LED initialization fails, create a dummy controller that does nothing
-            # This prevents plugin startup failures due to LED setup issues
-            self.lenovo_led = None
 
         super().__init__()
 
@@ -242,7 +230,7 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         return results
 
     def switch_to(self, power_plan_identifier):
-        PowerPlanManager.switch_to_plan(power_plan_identifier, self.lenovo_led)
+        PowerPlanManager.switch_to_plan(power_plan_identifier, self.observers)
 
 
 if __name__ == "__main__":

@@ -54,19 +54,6 @@ This plugin makes use of the following resources:
 
 * *https://icons8.com[Icons8]*: Icons used in the plugin interface
 
-== Lenovo Legion Power LED Support
-
-This plugin includes experimental support for controlling the power LED on Lenovo Legion laptops.
-
-For detailed information on enabling and configuring this feature, see link:LENOVO_LEGION_LED.md[LENOVO_LEGION_LED.md].
-
-*Quick Summary:*
-
-* Disabled by default
-* Only works on Lenovo Legion laptops
-* Requires `wmi` Python package: `pip install wmi pywin32`
-* Enable by setting `lenovo_legion_led_enabled: true` in `.cache/settings.json`
-
 == Support
 
 For issues, feature requests, or questions, open an issue on https://github.com/TillKnollmann/Flow.Launcher.Plugin.PowerPlans/issues[GitHub Issues].
