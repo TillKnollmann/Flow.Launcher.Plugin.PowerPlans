@@ -14,6 +14,7 @@ from flowlauncher import FlowLauncher
 
 from default_power_plans import DefaultPowerPlans
 from system_encoding import SystemEncoding
+from lenovo_legion_led import LenovoLegionLED, create_default_settings_file
 
 
 class Result:
@@ -57,8 +58,14 @@ class PowerPlan:
         self.name = name
         self.icon_path = icon_path
 
-    def switch_to(self):
-        PowerPlanManager.switch_to_plan(self.identifier)
+    def switch_to(self, lenovo_led_controller=None):
+        """
+        Switch to this power plan.
+        
+        Args:
+            lenovo_led_controller: Optional LenovoLegionLED instance for LED control
+        """
+        PowerPlanManager.switch_to_plan(self.identifier, lenovo_led_controller)
 
 
 class PowerPlanManager:
@@ -147,11 +154,25 @@ class PowerPlanManager:
         return sorted(plans, key=lambda plan: plan.name)
 
     @staticmethod
-    def switch_to_plan(identifier):
-        """Switches to the specified power plan."""
+    def switch_to_plan(identifier, lenovo_led_controller=None):
+        """
+        Switches to the specified power plan.
+        
+        Args:
+            identifier: The power plan GUID to switch to
+            lenovo_led_controller: Optional LenovoLegionLED instance for LED control
+        """
         subprocess.call(
             ["powercfg", "/s", identifier], creationflags=subprocess.CREATE_NO_WINDOW
         )
+        
+        # Update Lenovo Legion LED if controller is available
+        if lenovo_led_controller:
+            try:
+                lenovo_led_controller.set_led_for_power_plan(identifier)
+            except Exception:
+                # Silently ignore LED control errors - don't affect core functionality
+                pass
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
@@ -172,6 +193,12 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         self.power_plan_manager = PowerPlanManager(
             self.system_encoding, self.default_plans
         )
+        
+        # Initialize Lenovo Legion LED support
+        settings_path = os.path.join(cache_dir, "settings.json")
+        if not os.path.exists(settings_path):
+            create_default_settings_file(settings_path)
+        self.lenovo_led = LenovoLegionLED(settings_path)
 
         super().__init__()
 
@@ -210,7 +237,7 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         return results
 
     def switch_to(self, power_plan_identifier):
-        PowerPlanManager.switch_to_plan(power_plan_identifier)
+        PowerPlanManager.switch_to_plan(power_plan_identifier, self.lenovo_led)
 
 
 if __name__ == "__main__":
