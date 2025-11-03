@@ -186,7 +186,7 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         self.observers = [LenovoLegionLEDObserver(cache_dir)]
 
         self.power_plan_manager = PowerPlanManager(
-            self.system_encoding, self.default_plans, self.observers
+            self.system_encoding, self.default_plans
         )
 
         super().__init__()
