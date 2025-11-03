@@ -4,8 +4,6 @@ import json
 import os
 import subprocess
 
-import wmi
-
 
 class PowerPlanActivationObserver:
     """Interface for observing power plan activations."""
@@ -94,28 +92,30 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
             pass  # Ignore cache write errors
 
     def _set_led_color(self, color_code):
-        """Set LED via WMI. Tries LENOVO_LIGHTING_METHOD then LENOVO_GAMEZONE_DATA."""
+        """Set LED via PowerShell WMI calls."""
+        # WMI class name from reverse engineering - may vary by Legion model
+        self._try_wmi_method("LENOVO_LIGHTING_METHOD", "SetLighting", [0, color_code, 100])
+        # Alternative WMI class - fallback for different Legion models
+        self._try_wmi_method("LENOVO_GAMEZONE_DATA", "SetData", [f"PowerLED:{color_code}"])
 
+    def _try_wmi_method(self, wmi_class, method_name, params):
+        """Invoke WMI method via PowerShell subprocess."""
         try:
-            c = wmi.WMI(namespace="root\\WMI")
-
-            # WMI class name from reverse engineering - may vary by Legion model
-            try:
-                for method in c.LENOVO_LIGHTING_METHOD():
-                    # Parameters: zone (0=power LED, uncertain), color, brightness
-                    # Method signature based on community sources, not officially documented
-                    method.SetLighting(0, color_code, 100)
-                    return
-            except Exception:
-                pass  # Ignore errors and try next method
-
-            # Alternative WMI class - fallback for different Legion models
-            try:
-                for data in c.LENOVO_GAMEZONE_DATA():
-                    # String format based on Lenovo Legion Toolkit reverse engineering
-                    data.SetData(f"PowerLED:{color_code}")
-                    return
-            except Exception:
-                pass  # Ignore errors
+            # Build PowerShell command to invoke WMI method
+            # Parameters: zone (0=power LED, uncertain), color, brightness
+            params_str = ", ".join(str(p) if isinstance(p, int) else f'"{p}"' for p in params)
+            
+            ps_command = (
+                f"Get-WmiObject -Namespace root\\WMI -Class {wmi_class} | "
+                f"ForEach-Object {{ $_.{method_name}({params_str}) }}"
+            )
+            
+            subprocess.run(
+                ["powershell", "-Command", ps_command],
+                creationflags=subprocess.CREATE_NO_WINDOW,
+                stderr=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                timeout=2,
+            )
         except Exception:
-            pass  # Ignore WMI connection errors
+            pass  # Ignore errors - WMI class may not exist on this model
