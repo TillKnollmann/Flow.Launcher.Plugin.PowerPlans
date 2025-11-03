@@ -13,6 +13,7 @@ sys.path.append(os.path.join(parent_folder_path, "plugin"))
 from flowlauncher import FlowLauncher
 
 from default_power_plans import DefaultPowerPlans
+from power_plan_observers import LenovoLegionLEDObserver
 from system_encoding import SystemEncoding
 
 
@@ -147,11 +148,24 @@ class PowerPlanManager:
         return sorted(plans, key=lambda plan: plan.name)
 
     @staticmethod
-    def switch_to_plan(identifier):
-        """Switches to the specified power plan."""
+    def switch_to_plan(identifier, observers=None):
+        """
+        Switches to the specified power plan.
+
+        Args:
+            identifier: The power plan GUID
+            observers: List of observers to notify
+        """
         subprocess.call(
             ["powercfg", "/s", identifier], creationflags=subprocess.CREATE_NO_WINDOW
         )
+
+        if observers:
+            for observer in observers:
+                try:
+                    observer.on_power_plan_activated(identifier)
+                except Exception:
+                    pass  # Ignore observer errors
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
@@ -168,6 +182,8 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
 
         plans_cache_path = os.path.join(cache_dir, "default_plans.json")
         self.default_plans = DefaultPowerPlans(self.system_encoding, plans_cache_path)
+
+        self.observers = [LenovoLegionLEDObserver(cache_dir)]
 
         self.power_plan_manager = PowerPlanManager(
             self.system_encoding, self.default_plans
@@ -210,7 +226,7 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         return results
 
     def switch_to(self, power_plan_identifier):
-        PowerPlanManager.switch_to_plan(power_plan_identifier)
+        PowerPlanManager.switch_to_plan(power_plan_identifier, self.observers)
 
 
 if __name__ == "__main__":
