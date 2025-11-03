@@ -27,9 +27,9 @@ import os
 import platform
 
 # Try to import WMI at module level for better performance
-_WMI_MODULE = None
 try:
-    import wmi as _WMI_MODULE
+    import wmi
+    _WMI_MODULE = wmi
 except ImportError:
     _WMI_MODULE = None
 
@@ -43,17 +43,6 @@ class LenovoLegionLED:
         "a1841308-3541-4fab-bc81-f71556f20b4a": "white",      # Power saver
         "381b4222-f694-41f0-9685-ff5bb260df2e": "white",      # Balanced
         "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c": "red",        # High performance
-    }
-    
-    # Lenovo-specific custom power plan GUIDs (if they exist on the system)
-    # These are commonly found on Legion devices with pre-configured plans
-    LENOVO_CUSTOM_PLANS = {
-        # Lenovo's Quiet mode (usually maps to power saver-like behavior)
-        "quiet": "white",
-        # Lenovo's Balanced mode  
-        "balanced": "white",
-        # Lenovo's Performance mode
-        "performance": "red",
     }
     
     def __init__(self, settings_file_path):
@@ -253,28 +242,24 @@ class LenovoLegionLED:
     
     def _set_led_via_powershell(self, color):
         """
-        Set LED color using PowerShell and registry manipulation.
+        Placeholder for PowerShell/registry-based LED control.
         
-        This is a fallback method that attempts to set registry keys
-        that control the LED, similar to what Lenovo Vantage does.
+        This method is not currently implemented because:
+        1. Registry key locations vary significantly between Legion models
+        2. Requires administrator rights to modify registry
+        3. WMI method (primary approach) is more reliable and portable
+        
+        Future implementation could attempt registry manipulation as a fallback
+        when WMI is not available, but this is left for future enhancement.
         
         Args:
-            color: LED color to set
+            color: LED color to set (unused in current implementation)
         """
-        try:
-            # This is a simplified approach - the actual registry keys
-            # vary by Legion model and BIOS version
-            # Common location: HKLM\SOFTWARE\Lenovo\SmartDisplay or
-            # HKLM\SOFTWARE\Lenovo\LenovoUtility
-            
-            # For now, we'll skip this method as it requires admin rights
-            # and registry key locations are highly device-specific
-            # Users should ensure WMI method works (by having wmi module installed)
-            pass
-            
-        except Exception:
-            # Silently fail - this is a best-effort feature
-            pass
+        # Placeholder - not implemented
+        # If you wish to contribute a registry-based implementation,
+        # please refer to Lenovo Legion Toolkit for guidance:
+        # https://github.com/BartoszCichecki/LenovoLegionToolkit
+        pass
 
 
 def create_default_settings_file(settings_file_path):

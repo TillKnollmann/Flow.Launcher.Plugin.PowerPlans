@@ -195,10 +195,15 @@ class PowerPlanSwitcherPlugin(FlowLauncher):
         )
         
         # Initialize Lenovo Legion LED support
-        settings_path = os.path.join(cache_dir, "settings.json")
-        if not os.path.exists(settings_path):
-            create_default_settings_file(settings_path)
-        self.lenovo_led = LenovoLegionLED(settings_path)
+        try:
+            settings_path = os.path.join(cache_dir, "settings.json")
+            if not os.path.exists(settings_path):
+                create_default_settings_file(settings_path)
+            self.lenovo_led = LenovoLegionLED(settings_path)
+        except Exception:
+            # If LED initialization fails, create a dummy controller that does nothing
+            # This prevents plugin startup failures due to LED setup issues
+            self.lenovo_led = None
 
         super().__init__()
 
