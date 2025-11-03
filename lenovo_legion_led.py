@@ -26,6 +26,13 @@ import json
 import os
 import platform
 
+# Try to import WMI at module level for better performance
+_WMI_MODULE = None
+try:
+    import wmi as _WMI_MODULE
+except ImportError:
+    _WMI_MODULE = None
+
 
 class LenovoLegionLED:
     """Manages Lenovo Legion power LED based on power plan changes."""
@@ -110,11 +117,8 @@ class LenovoLegionLED:
     
     def _check_wmi_availability(self):
         """Check if WMI Python library is available."""
-        try:
-            import wmi
-            self._wmi_available = True
-        except ImportError:
-            self._wmi_available = False
+        # WMI module is imported at the top level, just check if it's available
+        self._wmi_available = _WMI_MODULE is not None
     
     def is_supported(self):
         """
@@ -187,11 +191,12 @@ class LenovoLegionLED:
         Returns:
             bool: True if successful, False otherwise
         """
-        try:
-            import wmi
+        if _WMI_MODULE is None:
+            return False
             
+        try:
             # Connect to WMI
-            c = wmi.WMI(namespace="root\\WMI")
+            c = _WMI_MODULE.WMI(namespace="root\\WMI")
             
             # Try to find Lenovo lighting control
             # Different Legion models use different WMI classes
