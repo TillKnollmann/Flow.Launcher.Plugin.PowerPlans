@@ -1,3 +1,2 @@
 flowlauncher
 wmi
-pywin32
