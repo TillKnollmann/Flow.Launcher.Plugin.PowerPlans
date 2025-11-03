@@ -45,6 +45,17 @@ class LenovoLegionLED:
         "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c": "red",        # High performance
     }
     
+    # WMI color code mapping
+    WMI_COLOR_CODES = {
+        "white": 1,
+        "red": 2,
+        "blue": 3,
+    }
+    
+    # WMI LED control constants
+    WMI_LED_ZONE_POWER = 0
+    WMI_LED_BRIGHTNESS_MAX = 100
+    
     def __init__(self, settings_file_path):
         """
         Initialize the Lenovo Legion LED controller.
@@ -201,7 +212,11 @@ class LenovoLegionLED:
                 for method in lighting_methods:
                     # Set lighting method - parameters vary by model
                     # Common signature: SetLighting(zone, color, brightness)
-                    method.SetLighting(0, color_code, 100)  # zone 0, full brightness
+                    method.SetLighting(
+                        self.WMI_LED_ZONE_POWER,
+                        color_code,
+                        self.WMI_LED_BRIGHTNESS_MAX
+                    )
                     return True
             except Exception:
                 pass
@@ -211,6 +226,7 @@ class LenovoLegionLED:
                 gamezone_data = c.LENOVO_GAMEZONE_DATA()
                 for data in gamezone_data:
                     # Try setting the power LED
+                    # Format: "PowerLED:<color_code>"
                     data.SetData(f"PowerLED:{color_code}")
                     return True
             except Exception:
@@ -233,12 +249,7 @@ class LenovoLegionLED:
         Returns:
             int: WMI color code
         """
-        color_map = {
-            "white": 1,
-            "red": 2,
-            "blue": 3,
-        }
-        return color_map.get(color.lower(), 1)  # Default to white
+        return self.WMI_COLOR_CODES.get(color.lower(), 1)  # Default to white
     
     def _set_led_via_powershell(self, color):
         """
@@ -271,11 +282,9 @@ def create_default_settings_file(settings_file_path):
     """
     default_settings = {
         "lenovo_legion_led_enabled": False,
-        "lenovo_legion_led_info": (
-            "Set to true to enable Lenovo Legion power LED control. "
-            "This feature is only available on Lenovo Legion laptops. "
-            "Requires the 'wmi' Python package: pip install wmi pywin32"
-        )
+        "lenovo_legion_led_info": """Set to true to enable Lenovo Legion power LED control. \
+This feature is only available on Lenovo Legion laptops. \
+Requires the 'wmi' Python package: pip install wmi pywin32"""
     }
     
     try:
