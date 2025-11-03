@@ -6,8 +6,6 @@ import subprocess
 
 import wmi
 
-_WMI_MODULE = wmi
-
 
 class PowerPlanActivationObserver:
     """Interface for observing power plan activations."""
@@ -53,7 +51,7 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
                     data = json.load(f)
                     return data.get("is_lenovo_system", False)
             except Exception:
-                pass
+                pass  # Ignore cache read errors
 
         is_lenovo = False
         try:
@@ -93,28 +91,26 @@ class LenovoLegionLEDObserver(PowerPlanActivationObserver):
             with open(self._cache_file, "w") as f:
                 json.dump({"is_lenovo_system": is_lenovo}, f)
         except Exception:
-            pass
+            pass  # Ignore cache write errors
 
     def _set_led_color(self, color_code):
         """Set LED via WMI. Tries LENOVO_LIGHTING_METHOD then LENOVO_GAMEZONE_DATA."""
-        if _WMI_MODULE is None:
-            return
 
         try:
-            c = _WMI_MODULE.WMI(namespace="root\\WMI")
+            c = wmi.WMI(namespace="root\\WMI")
 
             try:
                 for method in c.LENOVO_LIGHTING_METHOD():
                     method.SetLighting(0, color_code, 100)
                     return
             except Exception:
-                pass
+                pass  # Ignore errors and try next method
 
             try:
                 for data in c.LENOVO_GAMEZONE_DATA():
                     data.SetData(f"PowerLED:{color_code}")
                     return
             except Exception:
-                pass
+                pass  # Ignore errors
         except Exception:
-            pass
+            pass  # Ignore WMI connection errors

@@ -68,18 +68,16 @@ class PowerPlanManager:
     DEFAULT_APP_ICON = "Images/app.png"
     UUID_REGEX = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
-    def __init__(self, system_encoding, default_plans, observers=None):
+    def __init__(self, system_encoding, default_plans):
         """
         Initializes the PowerPlanManager.
 
         Args:
             system_encoding: SystemEncoding instance
             default_plans: DefaultPowerPlans instance
-            observers: List of PowerPlanActivationObserver instances
         """
         self.system_encoding = system_encoding
         self.default_plans = default_plans
-        self.observers = observers or []
 
     def get_all_system_plans(self):
         """Retrieves all power plans available on the system using powercfg."""
@@ -167,7 +165,7 @@ class PowerPlanManager:
                 try:
                     observer.on_power_plan_activated(identifier)
                 except Exception:
-                    pass
+                    pass  # Ignore observer errors
 
 
 class PowerPlanSwitcherPlugin(FlowLauncher):
