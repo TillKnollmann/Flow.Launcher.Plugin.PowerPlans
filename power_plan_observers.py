@@ -15,7 +15,6 @@ class PowerPlanActivationObserver:
 class LenovoLegionLEDObserver(PowerPlanActivationObserver):
     """Controls Lenovo Legion power LED when specific power plans are activated."""
 
-    # GUID to LED color code mapping (1=white, 2=red)
     LENOVO_POWER_PLANS = {
         "16edbccd-dee9-4ec4-ace5-2f0b5f2a8975": 0,  # Quiet -> blue
         "85d583c5-cf2e-4197-80fd-3789a227a72c": 1,  # Balanced -> white
